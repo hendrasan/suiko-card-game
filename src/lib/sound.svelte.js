@@ -1,15 +1,16 @@
-// Sound. Two small synths, no audio files:
+// Sound. Two small synths for effects (no audio files):
 // - cuelume (sfx): soft interface cues — buttons, select, pop-ups, count-up.
 // - ZzFX (fx): 8-bit game sounds — units, clashes, VP, win/lose tunes.
-// The on/off setting is kept in localStorage.
+// Music: two looped CC0 tracks (public/assets/music/CREDITS.txt).
+// The on/off settings are kept in localStorage.
 import { play, setEnabled, setVolume } from 'cuelume';
 import { ZZFX, zzfx } from 'zzfx';
 
-const KEY = 'suikoCS.sound';
-let saved = null;
-try { saved = localStorage.getItem(KEY); } catch (e) { /* storage blocked */ }
+const KEY = 'suikoCS.sound', MUSIC_KEY = 'suikoCS.music';
+const load = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const store = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage blocked */ } };
 
-export const sound = $state({ on: saved !== 'off' });
+export const sound = $state({ on: load(KEY) !== 'off', music: load(MUSIC_KEY) !== 'off' });
 setEnabled(sound.on);
 setVolume(0.6);
 ZZFX.volume = 0.25;
@@ -17,7 +18,7 @@ ZZFX.volume = 0.25;
 export function toggleSound() {
   sound.on = !sound.on;
   setEnabled(sound.on);
-  try { localStorage.setItem(KEY, sound.on ? 'on' : 'off'); } catch (e) { /* storage blocked */ }
+  store(KEY, sound.on ? 'on' : 'off');
   if (sound.on) play('toggle');
 }
 
@@ -82,3 +83,44 @@ export function battleSounds(g) {
   }
   last = now;
 }
+
+// ---------- Music ----------
+const TRACKS = { menu: 'assets/music/home-town.mp3', battle: 'assets/music/army-approaching.mp3' };
+const MUSIC_VOLUME = 0.4, FADE_MS = 800;
+const players = {};
+let current = null;
+
+function player(name) {
+  if (!players[name]) { const a = new Audio(TRACKS[name]); a.loop = true; a.volume = 0; players[name] = a; }
+  return players[name];
+}
+// Change the volume of a to v in FADE_MS; pause it at 0.
+function fade(a, v) {
+  clearInterval(a.fadeTimer);
+  const from = a.volume, t0 = performance.now();
+  a.fadeTimer = setInterval(() => {
+    const k = Math.min(1, (performance.now() - t0) / FADE_MS);
+    a.volume = from + (v - from) * k;
+    if (k === 1) { clearInterval(a.fadeTimer); if (v === 0) a.pause(); }
+  }, 30);
+}
+function startCurrent() {
+  if (!sound.music || !current) return;
+  const a = player(current);
+  // Before the first click the browser blocks play(); the click listener below tries again.
+  a.play().then(() => fade(a, MUSIC_VOLUME)).catch(() => {});
+}
+
+// Play track 'menu' or 'battle' with a crossfade.
+export function music(name) {
+  if (name === current) return;
+  if (current && players[current]) fade(players[current], 0);
+  current = name;
+  startCurrent();
+}
+export function toggleMusic() {
+  sound.music = !sound.music;
+  store(MUSIC_KEY, sound.music ? 'on' : 'off');
+  if (sound.music) startCurrent(); else if (players[current]) fade(players[current], 0);
+}
+addEventListener('pointerdown', () => { if (current && players[current]?.paused) startCurrent(); });

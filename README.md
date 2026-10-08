@@ -18,7 +18,7 @@ npm run preview   # serve dist/ on localhost
   - `engine.js` — battle rules.
   - `ai.js` — computer opponent.
   - `decks.js` — starter deck and campaign opponent decks.
-- `src/lib/sound.svelte.js` — sound, made live with Web Audio (no audio files): [cuelume](https://github.com/danielwh2/cuelume) for interface cues, [ZzFX](https://github.com/KilledByAPixel/ZzFX) for 8-bit game sounds (`FX`, `TUNES`). Press M or use the Sound button to turn sound on or off. Try every sound on `/mockup.html`.
+- `src/lib/sound.svelte.js` — sound, made live with Web Audio (no audio files): [cuelume](https://github.com/danielwh2/cuelume) for interface cues, [ZzFX](https://github.com/KilledByAPixel/ZzFX) for 8-bit game sounds (`FX`, `TUNES`). Music: two looped CC0 tracks by Juhani Junkala in `public/assets/music/` (see `CREDITS.txt`), menu and battle, with a crossfade. M = sound effects on/off, N = music on/off (also buttons in the hub menu and the battle log). Try every sound on `/mockup.html`.
 - `src/lib/save.svelte.js` — save data, shop, deck rules, screen navigation.
 - `src/lib/battle.svelte.js` — battle screen state and the human controller.
 - `src/lib/screens/` — one component per screen (title, hub, deck editor, shop, card file, rules, battle, result).
