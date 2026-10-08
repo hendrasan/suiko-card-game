@@ -109,3 +109,24 @@ export function startBattle(o) {
   go('battle');
   g.run().catch(e => { console.error(e); g.log('Error: ' + e.message); });
 }
+
+// Data for the battle scene (Scene.svelte), or null when no battle or duel runs.
+const MODE_NAMES = { atk: 'sword battle', mil: 'army battle', fac: 'facility', duel: 'duel' };
+export function sceneOf(g) {
+  const duel = g.duelShow;
+  const m = g.active || (duel && duel.m);
+  if (!m) return null;
+  const sides = [0, 1].map(p => {
+    if (duel) return { key: 'atk', total: Math.max(0, duel.v[p]), target: null, units: [], pick: duel.picks[p]?.id };
+    const n = g.need(m, p);
+    const units = m.sides[p].map(x => ({ uid: x.uid, id: x.id, base: g.def(x)[n.key], v: g.stat(x, m)[n.key] }));
+    return { key: n.key, total: g.total(m, p, n.key), target: n.target, units };
+  });
+  return {
+    uid: m.uid,
+    card: m.card,
+    theme: m.mode === 'fac' ? 'castle' : ['forest', 'desert', 'mountain'][m.card % 3],
+    label: `${m.owner === 0 ? 'Your' : 'Enemy'} ${MODE_NAMES[m.mode] || 'mission'}`,
+    sides,
+  };
+}

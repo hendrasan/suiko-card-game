@@ -91,6 +91,7 @@ img.ic { height: 1.1em; width: auto; vertical-align: -0.2em; image-rendering: pi
 .label { font-size: 12px; color: var(--dim); }
 
 /* Mission field: brown dirt with dots */
+.scene-slot { flex: 1; min-height: 0; }
 .missions { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 6px;
   background: radial-gradient(circle, #7a4c32 2px, transparent 2.5px) 0 0 / 16px 16px, linear-gradient(180deg, var(--dirt), #7c4e33); }
 .mslot { border: 2px dashed #ffffff30; border-radius: 4px; display: flex; flex-direction: column; align-items: center;

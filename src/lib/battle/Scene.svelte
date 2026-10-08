@@ -1,13 +1,14 @@
 <script>
   // Battle scene for one mission: background, mission card in the centre,
   // your units on the left, enemy units on the right, big totals.
-  // sides[0] = you, sides[1] = enemy: {units: [{uid, id, v, base}], total, target}
-  // key: the stat that counts here (atk | mil | bld). theme: forest | desert | mountain | castle
+  // sides[0] = you, sides[1] = enemy: {key, total, target, units: [{uid, id, v, base}], pick}
+  //   key: the stat that counts for that side (atk | mil | bld). pick: duel card id (duel only).
+  // theme: forest | desert | mountain | castle. label: text under the mission card.
   import Card from '../components/Card.svelte';
   import Face from '../components/Face.svelte';
   import Icon from '../components/Icon.svelte';
 
-  let { theme = 'forest', card, key, sides } = $props();
+  let { theme = 'forest', card, label = '', sides } = $props();
 
   // Animate a number from its last value to v.
   const countTo = v => el => {
@@ -32,11 +33,12 @@
 
   {#each sides as s, p}
     <div class="total" class:me={p === 0} class:opp={p === 1}>
-      <Icon k={key} /><span class="px-num big" {@attach countTo(s.total)}>0</span><span class="px-num tgt">/{s.target}</span>
+      <Icon k={s.key} /><span class="px-num big" {@attach countTo(s.total)}>0</span>{#if s.target != null}<span class="px-num tgt">/{s.target}</span>{/if}
     </div>
     <div class="units" class:me={p === 0} class:opp={p === 1}>
-      {#each s.units as u, i (u.uid)}
-        <div class="unit" style="animation-delay:{i * 120}ms">
+      {#if s.pick}<div class="unit"><Card id={s.pick} s={1.3} /></div>{/if}
+      {#each s.units as u (u.uid)}
+        <div class="unit">
           <Face id={u.id} size={54} />
           <span class="px-num v" class:up={u.v > u.base} class:down={u.v < u.base}>{u.v}</span>
         </div>
@@ -44,7 +46,7 @@
     </div>
   {/each}
 
-  <div class="mcard"><Card id={card} s={2} /></div>
+  <div class="mcard"><Card id={card} s={2} />{#if label}<div class="mlabel">{label}</div>{/if}</div>
 </div>
 
 <style>
@@ -77,7 +79,9 @@
   .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 42%; border-top: 4px solid var(--g2);
     background: radial-gradient(circle, #0002 2px, transparent 2.5px) 0 0 / 18px 18px, linear-gradient(180deg, var(--g1), var(--g2)); }
 
-  .mcard { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); filter: drop-shadow(0 6px 0 #0005); }
+  .mcard { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .mcard > :global(.card) { filter: drop-shadow(0 6px 0 #0005); }
+  .mlabel { font-size: 13px; padding: 2px 8px; background: #0007; border-radius: 2px; white-space: nowrap; }
 
   .total { position: absolute; top: 12px; display: flex; align-items: baseline; gap: 8px; }
   .total.me { left: 16px; } .total.opp { right: 16px; flex-direction: row-reverse; }

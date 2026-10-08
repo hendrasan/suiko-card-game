@@ -603,7 +603,7 @@ export class Game {
     };
     const v = [val(0, picks[0]), val(1, picks[1])];
     this.log(`Single combat: ${picks[0] ? this.def(picks[0]).name : '-'} (${v[0]}) vs ${picks[1] ? this.def(picks[1]).name : '-'} (${v[1]})`);
-    this.duelShow = { picks, v };
+    this.duelShow = { m, picks, v };
     this.update();
     await this.pause(this.delay * 3);
     this.duelShow = null;

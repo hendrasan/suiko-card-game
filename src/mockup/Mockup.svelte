@@ -8,7 +8,7 @@
 
   let uid = 1;
   const units = (ids, key, bonus = {}) => ids.map(id => ({ uid: uid++, id, base: CARDS[id][key], v: CARDS[id][key] + (bonus[id] || 0) }));
-  const side = (list, target, key) => ({ units: list, target, total: list.reduce((a, u) => a + u.v, 0) });
+  const side = (list, target, key) => ({ key, units: list, target, total: list.reduce((a, u) => a + u.v, 0) });
 
   const EXAMPLES = [
     { title: 'Sword battle — forest', theme: 'forest', card: 154, key: 'atk',
@@ -36,7 +36,7 @@
           {@render sideRow(plate('Highland Scouts', 1, 4, 31, 9), false)}
           <div class="scene-slot">
             {#key replay}
-              <Scene theme={ex.theme} card={ex.card} key={ex.key}
+              <Scene theme={ex.theme} card={ex.card} label="Your mission"
                 sides={[side(ex.me, ex.target, ex.key), side(ex.opp, ex.target, ex.key)]} />
             {/key}
           </div>
@@ -61,10 +61,16 @@
     </div>
   {/each}
 
+  <h2>Duel</h2>
+  <div class="duel">
+    <Scene theme="mountain" card={174} label="Your duel"
+      sides={[{ key: 'atk', total: 5, target: null, units: [], pick: 17 }, { key: 'atk', total: 2, target: null, units: [], pick: 12 }]} />
+  </div>
+
   <h2>The 4 background themes</h2>
   <div class="themes">
     {#each ['forest', 'desert', 'mountain', 'castle'] as t}
-      <div class="thumb"><div class="thumb-in"><Scene theme={t} card={152} key="atk" sides={[side([], 7), side([], 7)]} /></div><span>{t}</span></div>
+      <div class="thumb"><div class="thumb-in"><Scene theme={t} card={152} sides={[side([], 7, 'atk'), side([], 7, 'atk')]} /></div><span>{t}</span></div>
     {/each}
   </div>
 </div>
@@ -91,7 +97,7 @@
   .frame { width: 1280px; height: 800px; }
   .mock-stage { position: relative; width: 1280px; height: 800px; overflow: hidden; border: 3px solid var(--ink);
     background: linear-gradient(180deg, var(--sky1) 0%, var(--sky1) 38%, var(--sky2) 62%, var(--grass) 100%); }
-  .scene-slot { flex: 1; min-height: 0; }
+  .duel { width: 944px; height: 380px; }
   .themes { display: flex; gap: 16px; flex-wrap: wrap; }
   .thumb { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .thumb-in { width: 300px; height: 121px; overflow: hidden; }

@@ -20,8 +20,9 @@ npm run preview   # serve dist/ on localhost
 - `src/lib/save.svelte.js` — save data, shop, deck rules, screen navigation.
 - `src/lib/battle.svelte.js` — battle screen state and the human controller.
 - `src/lib/screens/` — one component per screen (title, hub, deck editor, shop, card file, rules, battle, result).
-- `src/lib/battle/` — parts of the battle board (player row, missions, hand, actions, pop-up).
-- `src/lib/components/` — `Card`, `CardDetail`, `Icon`.
+- `src/lib/battle/` — parts of the battle board (player row, missions, hand, actions, pop-up). `Scene.svelte` replaces the mission board while a battle or duel runs.
+- `src/lib/components/` — `Card`, `CardDetail`, `Icon` (pixel icons from `pixelIcons.js`), `Face` (face crop from the card art).
+- `mockup.html`, `src/mockup/` — dev-only page with the battle scene and sample data (`npm run dev`, open `/mockup.html`). Not in the build.
 - `src/app.css` — all styles.
 
 ## Assumptions (the sources do not say)
