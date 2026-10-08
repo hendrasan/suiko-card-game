@@ -1,6 +1,7 @@
 <script>
-  // One player's row: name, VP, mastermind, hand (enemy only), cleared cards.
+  // One player's row: name plate with VP, deck/discard counters, mastermind, hand (enemy only), cleared cards.
   import Card from '../components/Card.svelte';
+  import Icon from '../components/Icon.svelte';
   import { ui } from '../battle.svelte.js';
 
   let { p } = $props();
@@ -12,13 +13,17 @@
   const peek = $derived(g.P[0].peek || []);
 </script>
 
-<div class="side win" class:me class:opp={!me}>
-  <div class="pinfo">
+<div class="side" class:me class:opp={!me}>
+  <div class="plate">
     <div class="nm">{P.name}</div>
-    <div class="pips">
-      {#each { length: P.vpTarget }, i}<div class="pip" class:on={i < P.vp}></div>{/each}
+    <div class="vp">
+      <span class="vpl">VP</span>
+      {#each { length: P.vpTarget }, i}<span class="pip" class:on={i < P.vp}></span>{/each}
     </div>
-    <div class="label">VP {P.vp}/{P.vpTarget} · Deck {P.deck.length} · Discard {P.discard.length}</div>
+  </div>
+  <div class="counts">
+    <div title="Cards in deck"><Icon k="deck" /><span class="px-num">×{P.deck.length}</span></div>
+    <div title="Cards in discard pile"><Icon k="disc" /><span class="px-num">×{P.discard.length}</span></div>
   </div>
   {#if P.mm}<Card id={P.mm} s={0.72} />{/if}
   {#if !me}

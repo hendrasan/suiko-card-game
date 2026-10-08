@@ -1,7 +1,9 @@
 <script>
-  // Stat icon: atk (Sword), mil (Flag/troops), bld (Hammer).
-  const ICONS = { atk: '⚔', mil: '⚑', bld: '⚒' };
+  // Pixel icon: atk (Sword), mil (Flag/troops), bld (Hammer), deck, disc (discard pile).
+  import { ICON_URLS } from './pixelIcons.js';
+
+  const NAMES = { atk: 'Sword', mil: 'Troops', bld: 'Hammer', deck: 'Deck', disc: 'Discard' };
   let { k } = $props();
 </script>
 
-<span class="ic">{ICONS[k]}</span>
+<img class="ic" src={ICON_URLS[k]} alt={NAMES[k]} draggable="false">

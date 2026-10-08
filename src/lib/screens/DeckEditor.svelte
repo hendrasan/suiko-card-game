@@ -33,6 +33,8 @@
     return c.type === filter;
   }).sort((a, b) => a - b));
   const left = id => S.coll[id] - (CARDS[id].type === 'mm' ? (mm === id ? 1 : 0) : inDeck(id));
+  // [in deck, owned] for the detail panel
+  const detailCounts = $derived(detail ? [S.coll[detail] - left(detail), S.coll[detail]] : null);
 
   function add(id) {
     if (CARDS[id].type === 'mm') mm = id;
@@ -94,6 +96,6 @@
       </div>
     </div>
 
-    <div class="win detail" style="height:auto"><CardDetail id={detail} /></div>
+    <div class="win detail" style="height:auto"><CardDetail id={detail} counts={detailCounts} /></div>
   </div>
 </div>

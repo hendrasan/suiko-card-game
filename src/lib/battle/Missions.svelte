@@ -11,7 +11,7 @@
 
 {#snippet total(m, p, cls)}
   {@const n = g.need(m, p)}
-  <div class="t {cls}"><Icon k={n.key} /> {g.total(m, p, n.key)}/{n.target}</div>
+  <div class="t {cls}"><Icon k={n.key} /><span class="px-num">{g.total(m, p, n.key)}</span><small>/{n.target}</small></div>
 {/snippet}
 
 {#snippet units(m, p)}
@@ -22,7 +22,7 @@
       {@const v = g.stat(x, m)[key]}
       <div class="unit">
         <Card id={x.id} s={0.6} small />
-        <div class="v" class:up={v > base} class:down={v < base}><Icon k={key} />{v}</div>
+        <div class="v px-num" class:up={v > base} class:down={v < base}>{v}</div>
       </div>
     {/each}
   </div>
