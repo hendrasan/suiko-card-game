@@ -2,6 +2,7 @@
   import Card from '../components/Card.svelte';
   import { CARDS, cardPrice } from '../game/cards.js';
   import { game, save, addCard, openPack, PACK_PRICE } from '../save.svelte.js';
+  import { sfx } from '../sound.svelte.js';
 
   const S = game.S;
   let msg = $state('');
@@ -20,6 +21,7 @@
   function buyPack() {
     S.potch -= PACK_PRICE;
     pack = openPack(); pack.forEach(id => addCard(id)); save();
+    sfx('success');
     msg = '';
   }
   function buy(id) { S.potch -= cardPrice(id); addCard(id); save(); pack = null; msg = `Bought ${CARDS[id].name}.`; }

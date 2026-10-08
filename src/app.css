@@ -158,7 +158,7 @@ img.ic { height: 1.1em; width: auto; vertical-align: -0.2em; image-rendering: pi
 .cd-est { font-size: 12px; color: #8a4a40; margin-top: 2px; }
 
 /* Battle log: light bubble with dark text */
-.log { flex: 1; padding: 8px 10px; font-size: 13px; line-height: 1.35; overflow-y: auto;
+.log { flex: 1; padding: 8px 10px 30px; font-size: 13px; line-height: 1.35; overflow-y: auto;
   background: var(--bubble); color: var(--bubble-ink); box-shadow: none; border-radius: 10px; }
 .log div:last-child { color: #b2463f; }
 

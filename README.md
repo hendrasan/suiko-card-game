@@ -11,17 +11,19 @@ npm run preview   # serve dist/ on localhost
 
 ## Files
 
-- `public/assets/cards_*.png` — the 5 sprite sheets (10×5 cards, each card is 80×110 px at x = 2 + 82·col, y = 2 + 112·row).
+- `public/assets/sprites.png` — chibi battle sprites (ripped by James816), 144 characters in card order. `battle_sprites.png` is the same sheet with a transparent background (the game uses this one).
+- `public/assets/cards_*.png` — the 5 card sprite sheets (10×5 cards, each card is 80×110 px at x = 2 + 82·col, y = 2 + 112·row).
 - `src/lib/game/` — game logic. Plain JS, no UI code (also runs in Node).
   - `cards.js` — card data (stats, links, camps) and ability logic (`FX`).
   - `engine.js` — battle rules.
   - `ai.js` — computer opponent.
   - `decks.js` — starter deck and campaign opponent decks.
+- `src/lib/sound.svelte.js` — sound effects with [cuelume](https://github.com/danielwh2/cuelume) (Web Audio, no files). Press M or use the Sound button to turn sound on or off.
 - `src/lib/save.svelte.js` — save data, shop, deck rules, screen navigation.
 - `src/lib/battle.svelte.js` — battle screen state and the human controller.
 - `src/lib/screens/` — one component per screen (title, hub, deck editor, shop, card file, rules, battle, result).
 - `src/lib/battle/` — parts of the battle board (player row, missions, hand, actions, pop-up). `Scene.svelte` replaces the mission board while a battle or duel runs.
-- `src/lib/components/` — `Card`, `CardDetail`, `Icon` (pixel icons from `pixelIcons.js`), `Face` (face crop from the card art).
+- `src/lib/components/` — `Card`, `CardDetail`, `Icon` (pixel icons from `pixelIcons.js`), `Sprite` (chibi battle sprite).
 - `mockup.html`, `src/mockup/` — dev-only page with the battle scene and sample data (`npm run dev`, open `/mockup.html`). Not in the build.
 - `src/app.css` — all styles.
 

@@ -9,6 +9,7 @@ import { Game } from './game/engine.js';
 import { AI } from './game/ai.js';
 import { parseDeck } from './game/decks.js';
 import { game, go, afterBattle } from './save.svelte.js';
+import { sfx, battleSounds, resetBattleSounds } from './sound.svelte.js';
 
 class BattleUI {
   g = $state.raw(null);     // the Game
@@ -23,14 +24,16 @@ class BattleUI {
   start(g, onLeave) {
     this.g = g; this.req = null; this.sel = []; this.modal = null; this.detail = null;
     this.onLeave = onLeave;
+    resetBattleSounds();
     g.onUpdate = () => this.schedule();
   }
 
   schedule() {
-    if (!this.#raf) this.#raf = requestAnimationFrame(() => { this.#raf = 0; this.version++; });
+    if (!this.#raf) this.#raf = requestAnimationFrame(() => { this.#raf = 0; this.version++; battleSounds(this.g); });
   }
 
   ask(req) {
+    if (req.type === 'main') sfx('attention', { emphasis: 'subtle' }); // your turn
     return new Promise(resolve => { this.sel = []; this.req = { ...req, resolve }; });
   }
   answer(v) {
@@ -38,6 +41,7 @@ class BattleUI {
   }
 
   askModal(md) {
+    sfx('open');
     return new Promise(resolve => { this.modal = { picked: [], ...md, resolve }; });
   }
   closeModal(v) {
@@ -47,6 +51,7 @@ class BattleUI {
   pick(i) {
     const md = this.modal;
     let picked = md.picked;
+    sfx('select', { direction: picked.includes(i) ? 'back' : 'forward' });
     if (picked.includes(i)) picked = picked.filter(x => x !== i);
     else if (md.max === 1) picked = [i];
     else if (picked.length < md.max) picked = [...picked, i];
@@ -57,6 +62,7 @@ class BattleUI {
   toggleHand(c) {
     const req = this.req;
     if (!req) return;
+    sfx('select', { direction: this.sel.includes(c) ? 'back' : 'forward' });
     if (req.type === 'deploy') this.sel = this.sel[0] === c ? [] : [c];
     else if (this.sel.includes(c)) this.sel = this.sel.filter(x => x !== c);
     else this.sel = [...this.sel, c];

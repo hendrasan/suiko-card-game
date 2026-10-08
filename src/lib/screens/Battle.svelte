@@ -7,6 +7,7 @@
   import Scene from '../battle/Scene.svelte';
   import HandBar from '../battle/HandBar.svelte';
   import Modal from '../battle/Modal.svelte';
+  import SoundToggle from '../components/SoundToggle.svelte';
 
   // New scene data after each engine update (ui.version). The Scene stays mounted,
   // so units animate only when they arrive and totals count up from the last value.
@@ -35,5 +36,6 @@
       </div>
     </div>
   {/key}
+  <SoundToggle compact />
   <Modal />
 </div>

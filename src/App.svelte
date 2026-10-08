@@ -9,18 +9,23 @@
   import Rules from './lib/screens/Rules.svelte';
   import Battle from './lib/screens/Battle.svelte';
   import Result from './lib/screens/Result.svelte';
+  import { sfx, toggleSound } from './lib/sound.svelte.js';
 
   const SCREENS = { title: Title, name: NameEntry, hub: Hub, deck: DeckEditor, file: CardFile, rules: Rules, battle: Battle, result: Result };
 
   let w = $state(1280), h = $state(800);
   const scale = $derived(Math.min(w / 1280, h / 800));
   const Screen = $derived(SCREENS[nav.screen]);
+
+  // A soft tap for every button; the M key turns sound on or off.
+  function onclick(e) { if (e.target.closest('button:not(:disabled)')) sfx('tap', { volume: 0.5 }); }
+  function onkeydown(e) { if (e.key.toLowerCase() === 'm' && e.target.tagName !== 'INPUT') toggleSound(); }
 </script>
 
-<svelte:window bind:innerWidth={w} bind:innerHeight={h} />
+<svelte:window bind:innerWidth={w} bind:innerHeight={h} {onkeydown} />
 
 <div id="wrap">
-  <div id="stage" style="transform:scale({scale})">
+  <div id="stage" style="transform:scale({scale})" {onclick} role="presentation">
     {#key nav.screen}
       <Screen {...nav.props} />
     {/key}

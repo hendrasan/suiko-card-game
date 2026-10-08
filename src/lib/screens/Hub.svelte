@@ -3,6 +3,7 @@
   import { game, nav, go } from '../save.svelte.js';
   import Campaign from './Campaign.svelte';
   import Shop from './Shop.svelte';
+  import SoundToggle from '../components/SoundToggle.svelte';
 
   const S = game.S;
   const owned = $derived(Object.values(S.coll).reduce((a, b) => a + b, 0));
@@ -26,6 +27,7 @@
   <div class="hubgrid">
     <div class="menu win">
       {#each MENU as [label, onclick]}<button class="btn" {onclick}>{label}</button>{/each}
+      <SoundToggle />
     </div>
     <div class="pane win">
       {#if nav.tab === 'shop'}<Shop />{:else}<Campaign />{/if}

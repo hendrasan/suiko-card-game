@@ -4,6 +4,7 @@
   import CardDetail from '../components/CardDetail.svelte';
   import { CARDS } from '../game/cards.js';
   import { game, save, go, deckProblems } from '../save.svelte.js';
+  import { sfx } from '../sound.svelte.js';
 
   const S = game.S;
   // Work copy. It goes to the save only when you click Save.
@@ -37,10 +38,11 @@
   const detailCounts = $derived(detail ? [S.coll[detail] - left(detail), S.coll[detail]] : null);
 
   function add(id) {
+    sfx('select');
     if (CARDS[id].type === 'mm') mm = id;
     else if (inDeck(id) < S.coll[id] && inDeck(id) < 3 && deck.length < 50) deck.push(id);
   }
-  function remove(id) { deck.splice(deck.indexOf(id), 1); }
+  function remove(id) { sfx('select', { direction: 'back' }); deck.splice(deck.indexOf(id), 1); }
 
   function saveDeck() { S.deck = deck.slice(); S.mm = mm; save(); go('hub'); }
   function back() {

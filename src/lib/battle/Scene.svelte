@@ -5,8 +5,9 @@
   //   key: the stat that counts for that side (atk | mil | bld). pick: duel card id (duel only).
   // theme: forest | desert | mountain | castle. label: text under the mission card.
   import Card from '../components/Card.svelte';
-  import Face from '../components/Face.svelte';
+  import Sprite from '../components/Sprite.svelte';
   import Icon from '../components/Icon.svelte';
+  import { sfx } from '../sound.svelte.js';
 
   let { theme = 'forest', card, label = '', sides } = $props();
 
@@ -15,6 +16,7 @@
     const from = +(el.dataset.v || 0);
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || from === v) { el.textContent = v; el.dataset.v = v; return; }
     const t0 = performance.now(), dur = 500;
+    if (v > from) sfx('count', { duration: dur, volume: 0.5 });
     let raf;
     const step = now => {
       const k = Math.min(1, (now - t0) / dur);
@@ -39,7 +41,7 @@
       {#if s.pick}<div class="unit"><Card id={s.pick} s={1.3} /></div>{/if}
       {#each s.units as u (u.uid)}
         <div class="unit">
-          <Face id={u.id} size={54} />
+          <Sprite id={u.id} scale={2} flip={p === 0} />
           <span class="px-num v" class:up={u.v > u.base} class:down={u.v < u.base}>{u.v}</span>
         </div>
       {/each}
@@ -91,7 +93,7 @@
   .total .tgt { font-size: 14px; }
   .total.opp .tgt { order: -1; }
 
-  .units { position: absolute; bottom: 8px; width: 330px; display: flex; flex-wrap: wrap-reverse; gap: 2px 6px; }
+  .units { position: absolute; bottom: 8px; width: 370px; display: flex; flex-wrap: wrap-reverse; gap: 0 6px; }
   .units.me { left: 14px; justify-content: flex-end; }
   .units.opp { right: 14px; justify-content: flex-start; }
   .unit { display: flex; flex-direction: column; align-items: center; animation: stepin .48s steps(4) both; }
