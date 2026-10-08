@@ -1,0 +1,16 @@
+{
+  "name": "suikoden-card-stories",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "sim": "node tools/sim.js 200"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "svelte": "^5.57.2",
+    "vite": "^8.3.3"
+  }
+}

@@ -15,7 +15,7 @@ function instValue(g, x) {
   return s.atk + s.mil / 600 + s.bld * 0.5 + (g.def(x).cls === 'L' ? 1 : 0);
 }
 
-const AI = {
+export const AI = {
   async coin() { return Math.random() < 0.5 ? 'heads' : 'tails'; },
 
   async mulligan(g, p) {

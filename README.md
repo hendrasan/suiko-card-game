@@ -1,16 +1,28 @@
 # Suikoden Card Stories — web remake
 
-Open `index.html` in a browser. No build step and no server needed. The game saves to `localStorage`.
+Built with [Svelte 5](https://svelte.dev) and [Vite](https://vite.dev). The game saves to `localStorage`.
+
+```
+npm install
+npm run dev       # dev server with hot reload
+npm run build     # static files in dist/ (put them on any static host)
+npm run preview   # serve dist/ on localhost
+```
 
 ## Files
 
-- `assets/cards_*.png` — the 5 sprite sheets (10×5 cards, each card is 80×110 px at x = 2 + 82·col, y = 2 + 112·row).
-- `js/cards.js` — card data (stats, links, camps) and ability logic (`FX`).
-- `js/engine.js` — battle rules.
-- `js/ai.js` — computer opponent.
-- `js/ui.js` — battle screen and human input.
-- `js/meta.js` — title, campaign, deck editor, shop, card file, save.
-- `js/decks.js` — starter deck and campaign opponent decks.
+- `public/assets/cards_*.png` — the 5 sprite sheets (10×5 cards, each card is 80×110 px at x = 2 + 82·col, y = 2 + 112·row).
+- `src/lib/game/` — game logic. Plain JS, no UI code (also runs in Node).
+  - `cards.js` — card data (stats, links, camps) and ability logic (`FX`).
+  - `engine.js` — battle rules.
+  - `ai.js` — computer opponent.
+  - `decks.js` — starter deck and campaign opponent decks.
+- `src/lib/save.svelte.js` — save data, shop, deck rules, screen navigation.
+- `src/lib/battle.svelte.js` — battle screen state and the human controller.
+- `src/lib/screens/` — one component per screen (title, hub, deck editor, shop, card file, rules, battle, result).
+- `src/lib/battle/` — parts of the battle board (player row, missions, hand, actions, pop-up).
+- `src/lib/components/` — `Card`, `CardDetail`, `Icon`.
+- `src/app.css` — all styles.
 
 ## Assumptions (the sources do not say)
 
@@ -27,5 +39,5 @@ Open `index.html` in a browser. No build step and no server needed. The game sav
 Run AI against AI for all campaign decks (no browser):
 
 ```
-node tools/sim.js . 200
+npm run sim
 ```

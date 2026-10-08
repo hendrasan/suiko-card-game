@@ -9,9 +9,11 @@
 //   confirm(g, p, text, hint, ctx) -> bool
 //   duel(g, p, m) -> hand card
 
+import { CARDS, SQUIRRELS, fxOf } from './cards.js';
+
 let UID = 1;
 
-class Game {
+export class Game {
   constructor(cfg) {
     // cfg: {players:[{name, deck:[ids], mm, vpTarget, ctl}], onUpdate, delay}
     this.P = cfg.players.map((c, i) => ({
@@ -774,7 +776,7 @@ class Game {
   }
 }
 
-function shuffle(a) {
+export function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 }

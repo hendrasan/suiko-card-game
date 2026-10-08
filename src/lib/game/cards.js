@@ -2,7 +2,9 @@
 // Stats come from the GameFAQs card list. Values marked "est" in EST are estimates.
 // Ability texts are short own-words summaries; logic lives in FX below.
 
-const SHEETS = ['cards_001-050', 'cards_051-100', 'cards_101-150', 'cards_151-200', 'cards_201-250'];
+import { shuffle } from './engine.js';
+
+export const SHEETS = ['cards_001-050', 'cards_051-100', 'cards_101-150', 'cards_151-200', 'cards_201-250'];
 
 // id|name|class|sex|camp|atk|mil|bld|links|unite partners (comma list of names)
 // class: M=mastermind L=leader C=commoner R=craftsman F=free
@@ -223,11 +225,11 @@ const SILVER = {
 };
 
 // Rune bearers: characters with link letter I (assumption, see README).
-const CLASS_NAMES = { M: 'Mastermind', L: 'Leader', C: 'Commoner', R: 'Craftsman', F: 'Free' };
-const CAMP_NAMES = { HL: 'Highland', NA: 'New Alliance', CS: 'City-State', TR: 'Toran', IN: 'Independent' };
-const SQUIRRELS = ['Makumaku', 'Mikumiku', 'Mukumuku', 'Mekumeku', 'Mokumoku'];
+export const CLASS_NAMES = { M: 'Mastermind', L: 'Leader', C: 'Commoner', R: 'Craftsman', F: 'Free' };
+export const CAMP_NAMES = { HL: 'Highland', NA: 'New Alliance', CS: 'City-State', TR: 'Toran', IN: 'Independent' };
+export const SQUIRRELS = ['Makumaku', 'Mikumiku', 'Mukumuku', 'Mekumeku', 'Mokumoku'];
 
-const CARDS = {};
+export const CARDS = {};
 
 function parseRows(text, fn) {
   text.trim().split('\n').forEach(l => fn(l.trim().split('|')));
@@ -678,16 +680,16 @@ const FX = {
   191: { text: 'When built, the opponent discards their whole hand.' },
 };
 
-function fxOf(id) { return FX[CARDS[id].base] || {}; }
+export function fxOf(id) { return FX[CARDS[id].base] || {}; }
 for (const id in CARDS) CARDS[id].text = fxOf(+id).text || '';
 
-function cardSprite(id) {
+export function cardSprite(id) {
   const i = id - 1;
   return { sheet: SHEETS[Math.floor(i / 50)], col: (i % 50) % 10, row: Math.floor((i % 50) / 10) };
 }
 
 // Simple price model (potch).
-function cardPrice(id) {
+export function cardPrice(id) {
   const c = CARDS[id];
   let p;
   if (c.type === 'mm') p = 3000;

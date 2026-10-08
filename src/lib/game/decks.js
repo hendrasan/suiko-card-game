@@ -1,19 +1,19 @@
 // Deck lists. Format: "id:count id:count ...". Every deck has 50 cards, max 3 copies of a card.
 
-function parseDeck(spec) {
+export function parseDeck(spec) {
   const r = [];
   spec.trim().split(/\s+/).forEach(t => { const [id, n] = t.split(':'); for (let k = 0; k < +(n || 1); k++) r.push(+id); });
   return r;
 }
 
-const STARTER_DECK = `
+export const STARTER_DECK = `
 10:2 26:2 25:1 24:1 29:2 16:2 22:2
 33:2 38:2 53:2 59:2 56:2 96:2 105:2 115:2 134:2 128:2 137:2
 149:2 151:2 152:1 153:1 154:1 157:1 158:1 167:2 168:1 174:1
 176:1 180:1 181:1`;
 
 // Campaign. vp = [player target, opponent target].
-const OPPONENTS = [
+export const OPPONENTS = [
   { id: 'scouts', name: 'Highland Scouts', where: 'Tenzan Pass', vp: [3, 3], reward: 300, prize: 8,
     intro: 'A Highland patrol blocks the mountain path.',
     deck: `12:3 9:3 11:3 22:2 71:3 39:2 40:3 49:3 115:3 134:3 108:2 88:2 105:2 149:3 151:3 152:2 167:3 168:2 174:1 176:2` },
