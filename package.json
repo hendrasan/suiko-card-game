@@ -14,6 +14,7 @@
     "vite": "^8.3.3"
   },
   "dependencies": {
-    "cuelume": "^0.2.4"
+    "cuelume": "^0.2.4",
+    "zzfx": "^1.4.0"
   }
 }

@@ -5,6 +5,8 @@
   import Card from '../lib/components/Card.svelte';
   import CardDetail from '../lib/components/CardDetail.svelte';
   import Icon from '../lib/components/Icon.svelte';
+  import { fx, sfx, FX, TUNES } from '../lib/sound.svelte.js';
+  import { sounds } from 'cuelume';
 
   let uid = 1;
   const units = (ids, key, bonus = {}) => ids.map(id => ({ uid: uid++, id, base: CARDS[id][key], v: CARDS[id][key] + (bonus[id] || 0) }));
@@ -61,6 +63,12 @@
     </div>
   {/each}
 
+  <h2>Sound test</h2>
+  <p>ZzFX game sounds (edit FX and TUNES in src/lib/sound.svelte.js):</p>
+  <div class="sounds">{#each [...Object.keys(FX), ...Object.keys(TUNES)] as n}<button class="btn" onclick={() => fx(n)}>{n}</button>{/each}</div>
+  <p>cuelume interface cues:</p>
+  <div class="sounds">{#each sounds as n}<button class="btn" onclick={() => sfx(n)}>{n}</button>{/each}</div>
+
   <h2>Duel</h2>
   <div class="duel">
     <Scene theme="mountain" card={174} label="Your duel"
@@ -98,6 +106,7 @@
   .mock-stage { position: relative; width: 1280px; height: 800px; overflow: hidden; border: 3px solid var(--ink);
     background: linear-gradient(180deg, var(--sky1) 0%, var(--sky1) 38%, var(--sky2) 62%, var(--grass) 100%); }
   .duel { width: 944px; height: 380px; }
+  .sounds { display: flex; flex-wrap: wrap; gap: 8px; }
   .themes { display: flex; gap: 16px; flex-wrap: wrap; }
   .thumb { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .thumb-in { width: 300px; height: 121px; overflow: hidden; }
