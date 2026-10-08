@@ -184,6 +184,8 @@ img.ic { height: 1.1em; width: auto; vertical-align: -0.2em; image-rendering: pi
 .hubgrid { display: grid; grid-template-columns: 340px 1fr; gap: 14px; width: 100%; flex: 1; min-height: 0; }
 .menu { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .menu .btn { text-align: left; font-size: 20px; padding: 10px 16px; }
+/* Same box for every menu icon, so the labels line up */
+.menu .btn .ic { width: 28px; height: 22px; object-fit: contain; margin-right: 14px; }
 .pane { padding: 16px 20px; overflow-y: auto; min-height: 0; }
 .pane h2 { margin: 0 0 10px; font-weight: normal; color: var(--gold); font-size: 24px; text-shadow: 2px 2px 0 var(--ink); }
 .opplist { display: flex; flex-direction: column; gap: 8px; }
@@ -206,7 +208,8 @@ img.ic { height: 1.1em; width: auto; vertical-align: -0.2em; image-rendering: pi
 .dlist { font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
 .dlist .it { display: flex; justify-content: space-between; padding: 2px 6px; border-radius: 2px; cursor: pointer; }
 .dlist .it:hover { background: #ffffff20; color: var(--gold); }
-.dlist .sec { color: var(--dim); margin-top: 6px; border-bottom: 1px solid #ffffff30; }
+.dlist .sec { color: var(--gold); font-size: 15px; margin-top: 10px; padding: 3px 6px; background: #0003;
+  border-left: 3px solid var(--gold); text-shadow: 1px 1px 0 var(--ink); }
 .warnmsg { color: #ffb0a0; font-size: 14px; text-shadow: 1px 1px 0 var(--ink); }
 .okmsg { color: var(--ok); font-size: 14px; text-shadow: 1px 1px 0 var(--ink); }
 .rules p, .rules li { font-size: 16px; line-height: 1.5; color: #fbf0dc; }

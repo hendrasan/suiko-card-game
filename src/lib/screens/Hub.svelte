@@ -4,18 +4,19 @@
   import Campaign from './Campaign.svelte';
   import Shop from './Shop.svelte';
   import SoundToggle from '../components/SoundToggle.svelte';
+  import Icon from '../components/Icon.svelte';
 
   const S = game.S;
   const owned = $derived(Object.values(S.coll).reduce((a, b) => a + b, 0));
   const seen = $derived(Object.keys(S.seen).length);
 
   const MENU = [
-    ['⚔ Battle', () => go('hub', { tab: 'campaign' })],
-    ['▤ Edit Deck', () => go('deck')],
-    ['◈ Card Shop', () => go('hub', { tab: 'shop' })],
-    ['▦ Card File', () => go('file')],
-    ['? How to Play', () => go('rules', { back: 'hub' })],
-    ['⏻ Title Screen', () => go('title')],
+    ['atk', 'Battle', () => go('hub', { tab: 'campaign' })],
+    ['cards', 'Edit Deck', () => go('deck')],
+    ['shop', 'Card Shop', () => go('hub', { tab: 'shop' })],
+    ['book', 'Card File', () => go('file')],
+    ['help', 'How to Play', () => go('rules', { back: 'hub' })],
+    ['home', 'Title Screen', () => go('title')],
   ];
 </script>
 
@@ -26,7 +27,7 @@
   </div>
   <div class="hubgrid">
     <div class="menu win">
-      {#each MENU as [label, onclick]}<button class="btn" {onclick}>{label}</button>{/each}
+      {#each MENU as [icon, label, onclick]}<button class="btn" {onclick}><Icon k={icon} />{label}</button>{/each}
       <SoundToggle />
     </div>
     <div class="pane win">
