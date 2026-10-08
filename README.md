@@ -34,13 +34,14 @@ npm run preview   # serve dist/ on localhost
 - Camps (Highland, New Alliance, City-State, Toran, Independent) are set from Suikoden II story roles.
 - Silver cards 192–250 use the ability of their base card. Stats not listed in the FAQ are base + 1 Sword / +300 troops / +1 Hammer.
 - Genshu (113) and Sgt. Joe (120) stats are estimates.
-- Some "Response"/"Selection" abilities are not used (the card text says so).
+- Response/Selection abilities follow the card translations by zaltabor (GameFAQs), simplified to fit this engine. Karen limits only the next card on her mission. The AI does not use Tenkou or Raura, and it uses Gambling Hall only when it has no other card to play.
 - Max 3 copies of a card in a deck. You lose if your hand and deck are both empty at the start of your turn.
 
 ## Test
 
-Run AI against AI for all campaign decks (no browser):
+Tests run in Node (no browser):
 
 ```
-npm run sim
+npm run sim   # AI against AI for all campaign decks
+npm test      # scenario tests for the Response/Selection abilities
 ```

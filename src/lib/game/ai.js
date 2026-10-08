@@ -121,7 +121,8 @@ export const AI = {
 
   async deploy(g, p, m, opts) {
     const legal = g.legalCards(p, m);
-    if (!legal.length) return { type: 'pass' };
+    // Gambling Hall: try the top card only when nothing else can go and the deck is big enough.
+    if (!legal.length) return g.canGamble(p) && g.P[p].deck.length > 10 ? { type: 'gamble' } : { type: 'pass' };
     const n = g.need(m, p);
     const cur = g.total(m, p, n.key);
     let best = null, bestScore = -Infinity;
@@ -147,6 +148,7 @@ export const AI = {
     const items = req.items.slice();
     const val = x => (req.kind === 'inst' ? instValue(g, x) : aiValue(g, x));
     switch (req.hint) {
+      case 'tenkou': return []; // the AI does not swap characters
       case 'ownLoss':
       case 'discard':
         items.sort((a, b) => val(a) - val(b)); break;
@@ -166,6 +168,7 @@ export const AI = {
     if (hint === 'klaus') return true;
     if (hint === 'ai-pilika') return g.total(ctx, 1 - p, 'atk') > g.total(ctx, p, 'atk');
     if (hint === 'richmond') return aiValue(g, ctx) >= 2;
+    if (hint === 'ridley') return g.total(ctx, p, 'mil') < g.total(ctx, 1 - p, 'mil'); // save him if losing
     return true;
   },
 

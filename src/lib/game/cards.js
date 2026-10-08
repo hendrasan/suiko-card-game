@@ -361,7 +361,7 @@ const FX = {
         } },
   29: { text: 'Appearance: discard 1 male character on the other side.',
         appear: async (g, i, m) => g.killChoice(i.owner, m.sides[1 - i.owner].filter(x => g.def(x).sex === 'M'), 'Rina: discard a male character') },
-  30: { text: '(Selection ability not used in this version.)' },
+  30: { text: 'Army battle: before the clash you may return Ridley to your hand (if it has room); his troops do not count.' },
   31: { text: 'Cannot be used on facilities. Appearance: both players discard their whole hand.',
         can: (g, p, m) => m.mode !== 'fac',
         appear: async (g) => { g.discardHand(0); g.discardHand(1); } },
@@ -377,7 +377,7 @@ const FX = {
           if (c && g.def(c).type === 'char') await g.discardChoice(o, 'Apple: discard 1 more card');
         } },
   35: { text: 'Unite: Simone. When united, the opponent discards a random card.',
-        appear: async (g, i) => { if (i.united) g.discardRandom(1 - i.owner, 1); } },
+        appear: async (g, i) => { if (i.united) await g.discardRandom(1 - i.owner, 1); } },
   36: { text: 'Appearance: draw 2, keep 1, discard 1. +1 Hammer if a Library is built or in progress.',
         mod: (g, i) => g.anyCardInPlay(183) ? { bld: 1 } : null,
         appear: async (g, i) => g.emiliaDraw(i.owner) },
@@ -402,7 +402,7 @@ const FX = {
   48: { text: 'Unite: Genshu. Cannot be used if Teresa is on the other side. +2 Sword with Teresa on your side.',
         can: (g, p) => !own(g, 1 - p, 'Teresa'),
         mod: (g, i) => own(g, i.owner, 'Teresa') ? { atk: 2 } : null },
-  49: { text: '(Selection ability not used in this version.)' },
+  49: { text: 'Sword or army battle: if you have fewer troops here than the enemy when it ends, you may put all your characters here into your deck.' },
   50: { text: 'Appearance: discard the opponent character with the lowest Sword here.',
         appear: async (g, i, m) => {
           const t = m.sides[1 - i.owner]; if (!t.length) return;
@@ -428,7 +428,7 @@ const FX = {
   59: { text: '+4 Sword this turn when Tengaar is discarded.' },
   60: { text: 'Appearance: you may discard this mission and everyone on it, if you played it.',
         appear: async (g, i, m) => {
-          if (m.owner === i.owner && await g.confirm(i.owner, 'Pilika: discard this whole mission?', 'ai-pilika', m)) g.scrapMission(m);
+          if (m.owner === i.owner && await g.confirm(i.owner, 'Pilika: discard this whole mission?', 'ai-pilika', m)) await g.scrapMission(m);
         } },
   61: { text: 'Appearance: discard opponent characters here that link with their first character.',
         appear: async (g, i, m) => {
@@ -437,8 +437,8 @@ const FX = {
           for (const x of s.slice(1)) if (g.linksWith(x, first)) await g.kill(x, i.owner);
         } },
   62: { text: '+2 Sword this turn when Yoshino unites with him.' },
-  63: { text: '(Response ability not used in this version.)' },
-  64: { text: '(Response ability not used in this version.)' },
+  63: { text: 'Response: when you must discard a random card from your hand, you may discard Pohl instead.' },
+  64: { text: 'Response: when Ridley is discarded from a mission, you may send Boris there from your hand, ignoring links. On an army battle, the clash then happens at once.' },
   65: { text: 'Appearance: with Eilie and Rina on your side, the opponent discards 1 card and you discard 1 opponent character here.',
         appear: async (g, i, m) => {
           if (onSide(g, m, i.owner, 'Eilie') && onSide(g, m, i.owner, 'Rina')) {
@@ -467,11 +467,11 @@ const FX = {
         appear: async (g, i, m) => { for (const x of m.sides.flat()) if (g.stat(x, m).mil === 0) await g.kill(x, i.owner); } },
   77: { text: 'Unite: Koyu. +1 Sword with Gijimu here. With Gijimu and Koyu, the opponent discards a random card.',
         mod: (g, i, m) => onSide(g, m, i.owner, 'Gijimu') ? { atk: 1 } : null,
-        appear: async (g, i, m) => { if (onSide(g, m, i.owner, 'Gijimu') && onSide(g, m, i.owner, 'Koyu')) g.discardRandom(1 - i.owner, 1); } },
+        appear: async (g, i, m) => { if (onSide(g, m, i.owner, 'Gijimu') && onSide(g, m, i.owner, 'Koyu')) await g.discardRandom(1 - i.owner, 1); } },
 
   // Craftsmen
   78: { text: 'Can only be used on facilities.', can: (g, p, m) => m.mode === 'fac' },
-  79: { text: '(Ability not used in this version.)' },
+  79: { text: 'This turn, the next character sent to this mission (either player) must have the same Sword as Karen.' },
   80: { text: 'At the start of the opponent\'s turn, if Gordon is on a mission they played, they discard a random card.' },
   81: { text: 'Annallee, Pico and Alberto get +1 Hammer.',
         aura: (g, src, inst) => inst.owner === src.owner && ['Annallee', 'Pico', 'Alberto'].includes(g.def(inst).key) ? { bld: 1 } : null },
@@ -486,20 +486,21 @@ const FX = {
   84: { text: 'Stationed on a Bath: you get 1 VP.' },
   85: { text: 'Your characters here that link with Tessai get +1 Sword.',
         aura: (g, src, inst, m) => src.mission && src.mission === m && inst.owner === src.owner && notSelf(src, inst) && g.linksWith(inst, src) ? { atk: 1 } : null },
-  86: { text: '(Ability not used in this version.)' },
+  86: { text: 'Appearance: you may swap one of your characters here with one of yours on another unsolved mission (ignore links). Their Appearance abilities happen.',
+        appear: async (g, i, m) => g.tenkou(i, m) },
   87: { text: 'Appearance: shuffle all missions and facilities from your discard pile into your deck.',
         appear: async (g, i) => g.templeton(i.owner) },
-  88: { text: '(Selection ability not used in this version.)' },
+  88: { text: 'Sword battle clear or army clash: you may put 1 of your characters from this mission on the bottom of your deck.' },
   89: { text: 'Hai Yo gets +2 Sword.',
         aura: (g, src, inst) => inst.owner === src.owner && g.def(inst).key === 'Hai Yo' ? { atk: 2 } : null },
   90: { text: 'Can lead on Cooking Match (+1 Sword there). +1 Hammer on a Restaurant.',
         mod: (g, i, m) => m && m.card === 180 ? { bld: 1 } : null },
   91: { text: 'Your non-Highland characters with military get +100 military.',
         aura: (g, src, inst) => inst.owner === src.owner && g.def(inst).camp !== 'HL' && g.def(inst).mil > 0 ? { mil: 100 } : null },
-  92: { text: '(Response ability not used in this version.)' },
+  92: { text: 'Response: when all your characters on a mission must be discarded (not when it is cleared), you may put them into your deck instead and discard Huan.' },
   93: { text: 'Stationed on a Ranch: your missions and facilities need 1 less to clear.',
         target: (g, src, m, p) => src.stationedOn === 176 && p === src.owner ? -1 : 0 },
-  94: { text: '(Response ability not used in this version.)' },
+  94: { text: 'Response: in your deploy step you may send Raura from your hand to another unsolved mission, ignoring links. The battle moves to that mission.' },
   95: { text: 'Appearance: if the opponent has no non-character card in hand, they discard the top 2 of their deck.',
         appear: async (g, i) => {
           const o = 1 - i.owner;
@@ -525,8 +526,8 @@ const FX = {
          appear: async (g, i, m) => g.annallee(i, m) },
   102: { text: '-1 Sword if your side here has only human characters.',
          mod: (g, i, m) => m && m.sides[i.owner].every(x => isHuman(g.def(x))) ? { atk: -1 } : null },
-  103: { text: '(Response ability not used in this version.)' },
-  104: { text: '(Response ability not used in this version.)' },
+  103: { text: 'Response: when an enemy ability discards one of your characters, you may discard Elza from your hand instead. The enemy character that caused it is discarded too.' },
+  104: { text: 'Response: when a mission is cleared, you may discard Oulan from your hand to take up to 2 of your characters from that mission into your hand.' },
   105: { text: '+4 Sword if Neclord is on the other side. +1 Sword on Suppress Neclord.',
          mod: (g, i, m) => ({ atk: (onSide(g, m, 1 - i.owner, 'Neclord') ? 4 : 0) + (m && m.card === 164 ? 1 : 0) }) },
   106: { text: 'Unite: Meg. +1 Sword this turn when united.',
@@ -534,7 +535,7 @@ const FX = {
   107: { text: 'Needs a character with 3+ Sword on this mission. +3 Sword with Bolgan and Long Chan Chan on your side.',
          can: (g, p, m) => m.sides.flat().some(x => g.stat(x, m).atk >= 3),
          mod: (g, i, m) => onSide(g, m, i.owner, 'Bolgan') && onSide(g, m, i.owner, 'Long Chan Chan') ? { atk: 3 } : null },
-  108: { text: '(Ability not used in this version.)' },
+  108: { text: 'When this mission is cleared, you may return one of your beasts here to your deck.' },
   109: { text: 'Cannot join a mission with Lorelai. +2 Sword on Sindar Treasure.',
          can: (g, p, m) => !m.sides.flat().some(x => g.def(x).key === 'Lorelai'),
          mod: (g, i, m) => m && m.card === 159 ? { atk: 2 } : null },
@@ -660,7 +661,7 @@ const FX = {
   // Facilities
   176: { text: '' },
   177: { text: 'Once per turn, you may discard 1 card and draw 1.' },
-  178: { text: '(Ability not used in this version.)' },
+  178: { text: 'Each time you clear a mission or build a facility, you may move a character from it to the Inn. The character at the Inn goes back to your hand.' },
   179: { text: 'At the start of your turn, see 1 random card in the opponent\'s hand (per Appraiser).' },
   180: { text: '' },
   181: { text: '' },
@@ -673,7 +674,7 @@ const FX = {
   186: { text: 'Your non-Leader characters get +1 Sword.',
          aura: (g, src, inst) => inst.owner === src.owner && g.def(inst).cls !== 'L' ? { atk: 1 } : null },
   187: { text: 'After you refill your hand, you may discard 1 card and draw 1.' },
-  188: { text: '(Ability not used in this version.)' },
+  188: { text: 'In your deploy step, with fewer cards than your hand limit, you may play the top card of your deck. If it cannot be used, discard it and the next top card (counts as a pass).' },
   189: { text: 'The first character you put on each mission gets +500 military.',
          aura: (g, src, inst, m) => m && inst.owner === src.owner && m.sides[inst.owner][0] === inst ? { mil: 500 } : null },
   190: { text: 'When the opponent discards in their main phase, they must discard 1 more card.' },

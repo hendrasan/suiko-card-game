@@ -16,6 +16,14 @@
   // deploy: why the selected card cannot go to the mission ('' = it can)
   const why = $derived(req?.type === 'deploy' && sel[0] ? g.whyNot(0, sel[0], req.m) : '');
 
+  // Raura (Response): other missions Raura can go to.
+  const rauraTo = $derived(req?.type === 'deploy' ? g.rauraTargets(0, req.m) : []);
+  function raura() {
+    const items = rauraTo.map(m => ({ uid: 'm' + m.uid, id: m.card, m }));
+    ui.askModal({ title: 'Raura: go to which mission?', items, kind: 'card', min: 0, max: 1 })
+      .then(r => { if (r.length) ui.answer({ type: 'raura', card: g.handCard(0, 'Raura'), mission: r[0].m }); });
+  }
+
   function luca() {
     const m = req.m;
     ui.askModal({ title: 'Luca: sacrifice which ally?', items: m.sides[0].slice(), kind: 'inst', min: 0, max: 1 })
@@ -58,6 +66,8 @@
   {#if P.mm && g.def(P.mm).base === 7 && !P.lucaUsed && req.m.sides[0].length}
     <button class="btn" onclick={luca}>Luca: sacrifice an ally</button>
   {/if}
+  {#if rauraTo.length}<button class="btn" onclick={raura}>Raura: go to another mission</button>{/if}
+  {#if g.canGamble(0)}<button class="btn" onclick={() => ui.answer({ type: 'gamble' })}>Gambling Hall: play top card</button>{/if}
   <button class="btn" disabled={req.opts.mustPlay} onclick={() => ui.answer({ type: 'pass' })}>Pass</button>
   {#if why}<div class="warnmsg">{why}</div>{/if}
 {:else}

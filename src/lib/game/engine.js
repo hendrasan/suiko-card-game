@@ -63,6 +63,10 @@ export class Game {
     return [...la].some(ch => lb.includes(ch));
   }
   missionOf(inst) { return this.missions.find(m => m.sides[inst.owner].includes(inst)) || null; }
+  handCard(p, key) { return this.P[p].hand.find(c => this.def(c).key === key); }
+  hasRoom(p) { return this.P[p].hand.length < this.handLimit(p); }
+  activeOn(m, p, key) { return m.sides[p].find(x => this.def(x).key === key && this.textOn(x)); }
+  toHand(p, x) { x.tmp = { atk: 0, mil: 0, bld: 0 }; this.P[p].hand.push(x); }
 
   // Is the card's text active where it is?
   textOn(inst) {
@@ -145,9 +149,14 @@ export class Game {
   removeFromHand(p, c) { const h = this.P[p].hand; const i = h.indexOf(c); if (i >= 0) h.splice(i, 1); }
   discardFromHand(p, c) { this.removeFromHand(p, c); this.toDiscard(p, c.id); }
   discardHand(p) { const P = this.P[p]; P.hand.forEach(c => this.toDiscard(p, c.id)); P.hand = []; this.log(`${P.name} discards the whole hand.`); }
-  discardRandom(p, n) {
+  async discardRandom(p, n) {
     const P = this.P[p];
     for (let k = 0; k < n && P.hand.length; k++) {
+      // Pohl (Response): discard Pohl instead of a random card.
+      const pohl = this.handCard(p, 'Pohl');
+      if (pohl && P.hand.length > 1 && await this.confirm(p, 'Pohl: discard Pohl instead of a random card?', 'pohl')) {
+        this.discardFromHand(p, pohl); this.log(`${P.name} discards Pohl instead.`); continue;
+      }
       const c = P.hand[Math.floor(Math.random() * P.hand.length)];
       this.discardFromHand(p, c); this.log(`${P.name} discards ${this.def(c).name} (random).`);
     }
@@ -172,12 +181,53 @@ export class Game {
     if (!self && by !== inst.owner && side.some(x => this.def(x).key === 'Chaco' && this.textOn(x))) {
       this.log(`Chaco protects ${this.def(inst).name}.`); return false;
     }
+    // Elza (Response): an enemy ability discards your character. Discard Elza from your hand
+    // instead; the enemy character that caused it is discarded too. (Betrayal is not an ability kill.)
+    const elza = !self && by !== inst.owner && this.handCard(inst.owner, 'Elza');
+    if (elza && await this.confirm(inst.owner, `Elza: discard Elza from your hand to save ${this.def(inst).name}?`, 'elza', inst)) {
+      this.discardFromHand(inst.owner, elza);
+      this.log(`Elza takes the blow for ${this.def(inst).name}.`);
+      const src = this.appearing;
+      if (src && src.owner === by && this.missionOf(src)) await this.kill(src, inst.owner, true);
+      return false;
+    }
     side.splice(side.indexOf(inst), 1);
     this.leaveMission(inst);
     this.log(`${this.def(inst).name} (${this.P[inst.owner].name}) is discarded.`);
     if (this.def(inst).key === 'Tengaar') {
       for (const x of this.inPlayOf(inst.owner)) if (this.def(x).key === 'Hix' && !x.hixDone) { x.tmp.atk += 4; x.hixDone = true; }
     }
+    if (this.def(inst).key === 'Ridley' && this.deciding !== m && this.missions.includes(m)) await this.boris(inst.owner, m);
+    return true;
+  }
+  // Boris (Response): Ridley was discarded from mission m. Send Boris there, ignoring links.
+  // On an army battle, the battle then goes to the clash at once.
+  async boris(p, m) {
+    const b = this.handCard(p, 'Boris');
+    if (!b || this.whyNot(p, b, m, { ignoreLinks: true })) return;
+    if (!await this.confirm(p, 'Boris: Ridley is gone. Send Boris to this mission?', 'boris', m)) return;
+    this.log('Boris rushes in for Ridley!');
+    await this.deploy(p, b, m);
+    if (m.mode === 'mil') m.forceEnd = true;
+  }
+  // Stallion (on mission m, fewer troops than the enemy) or Huan (in hand): side q is about to be
+  // destroyed. Put all of q's characters here into q's deck instead. Returns true if done.
+  async saveSide(m, q, stallionOnly) {
+    const side = m.sides[q], P = this.P[q];
+    if (!side.length) return false;
+    let how = null;
+    const mil = m.endMil || [this.total(m, 0, 'mil'), this.total(m, 1, 'mil')];
+    if (this.activeOn(m, q, 'Stallion') && mil[q] < mil[1 - q] &&
+        await this.confirm(q, 'Stallion: return all your characters here to your deck?', 'save', m)) how = 'Stallion';
+    const huan = !how && !stallionOnly && this.handCard(q, 'Huan');
+    if (huan && await this.confirm(q, 'Huan: put all your characters here into your deck (Huan is discarded)?', 'save', m)) {
+      this.discardFromHand(q, huan); how = 'Huan';
+    }
+    if (!how) return false;
+    side.forEach(x => P.deck.push(x.id));
+    m.sides[q] = [];
+    P.deck = shuffle(P.deck);
+    this.log(`${how}: ${P.name}'s characters go back into the deck.`);
     return true;
   }
   leaveMission(inst) {
@@ -226,6 +276,7 @@ export class Game {
     if (mb === 154 && d.sex !== 'F' && side.some(x => this.def(x).sex !== 'F')) return 'Only 1 non-female here';
     if (mb === 158 && opts.united && p !== m.owner) return 'No Unite here';
     if (fx.can && mb !== 160 && !fx.can(this, p, m)) return 'Condition not met';
+    if (m.karen && m.karen.turn === this.turnNo && d.atk !== m.karen.atk) return `Karen: the next card needs Sword ${m.karen.atk}`;
     return null;
   }
   legalCards(p, m, opts) { return this.P[p].hand.filter(c => !this.whyNot(p, c, m, opts)); }
@@ -245,6 +296,9 @@ export class Game {
     }
     m.sides[p].push(inst);
     this.log(`${P.name} sends ${d.name} to ${this.def(m.card).name}${inst.united ? ' (Unite!)' : ''}.`);
+    // Karen: this turn, the next character sent here must have the same Sword as Karen.
+    delete m.karen;
+    if (d.key === 'Karen' && this.textOn(inst)) { m.karen = { atk: this.stat(inst, m).atk, turn: this.turnNo }; this.log(`Karen: the next card here needs Sword ${m.karen.atk}.`); }
     // Rowd leaves if a 1500+ military character joins against him.
     for (const x of m.sides[1 - p].slice()) {
       if (this.def(x).key === 'Rowd' && this.textOn(x) && this.stat(inst, m).mil >= 1500) { this.log('Rowd runs away!'); await this.kill(x, x.owner, true); }
@@ -267,7 +321,9 @@ export class Game {
     const P = this.P[inst.owner];
     if (P.appearBlock) { P.appearBlock = false; this.log(`Mazus cancels ${this.def(inst).name}'s ability.`); return; }
     if (!this.missionOf(inst)) return;
-    await f.appear(this, inst, m);
+    const prev = this.appearing;
+    this.appearing = inst; // the character whose ability runs now (Elza needs it)
+    try { await f.appear(this, inst, m); } finally { this.appearing = prev; }
     this.update();
   }
 
@@ -331,7 +387,7 @@ export class Game {
     const P = this.P[p], o = 1 - p;
     // Gordon on an unsolved mission played by p (owned by the other player? Gordon belongs to opponent)
     for (const m of this.missions) {
-      if (m.owner === p && m.sides[o].some(x => this.def(x).key === 'Gordon' && this.textOn(x))) { this.log('Gordon causes trouble!'); this.discardRandom(p, 1); }
+      if (m.owner === p && m.sides[o].some(x => this.def(x).key === 'Gordon' && this.textOn(x))) { this.log('Gordon causes trouble!'); await this.discardRandom(p, 1); }
     }
     for (let k = 0; k < this.builtCount(p, 184); k++) {
       if (P.discard.length) { const id = P.discard.pop(); P.deck.push(id); this.log(`Warehouse: ${CARDS[id].name} goes to the bottom of the deck.`); }
@@ -389,7 +445,8 @@ export class Game {
       const P = this.P[actor];
       const legal = this.legalCards(actor, m);
       let act = { type: 'pass' };
-      if (legal.length || (P.mm && this.def(P.mm).base === 7 && !P.lucaUsed && m.sides[actor].length)) {
+      if (legal.length || (P.mm && this.def(P.mm).base === 7 && !P.lucaUsed && m.sides[actor].length) ||
+          this.canGamble(actor) || this.rauraTargets(actor, m).length) {
         act = await P.ctl.deploy(this, actor, m, { mustPlay: mustPlayFor === actor && legal.length > 0 });
       }
       if (act.type === 'deploy') {
@@ -397,10 +454,27 @@ export class Game {
         await this.deploy(actor, act.card, m);
         await this.uniteChain(actor, act.card, m);
         if (await this.checkClear(m)) break;
+      } else if (act.type === 'raura') {
+        // Raura (Response): go to another unsolved mission, ignoring links. The battle moves there.
+        passes = 0; mustPlayFor = -1;
+        this.log(`${P.name} sends Raura to ${this.def(act.mission.card).name}. The battle moves there!`);
+        m = act.mission; this.active = m; m.forceEnd = false;
+        await this.deploy(actor, act.card, m);
+        if (await this.checkClear(m)) break;
+      } else if (act.type === 'gamble') {
+        const c = await this.gamble(actor, m);
+        if (c) {
+          passes = 0; mustPlayFor = -1;
+          await this.uniteChain(actor, c, m);
+          if (await this.checkClear(m)) break;
+        } else {
+          passes++;
+          if (passes >= 2) break;
+        }
       } else if (act.type === 'luca') {
         P.lucaUsed = true; passes = 0;
         this.log('Luca Blight: "Fight to the death, pigs!"');
-        await this.kill(act.inst, actor, true); this.discardRandom(1 - actor, 1);
+        await this.kill(act.inst, actor, true); await this.discardRandom(1 - actor, 1);
         continue;
       } else {
         this.log(`${P.name} passes.`);
@@ -462,6 +536,13 @@ export class Game {
   async decide(m) {
     if (m.mode !== 'mil') return this.checkClear(m);
     if (!m.sides[0].length && !m.sides[1].length) return;
+    // Ridley (Selection): may go back to the hand before the clash; his troops then do not count.
+    for (const p of [0, 1]) {
+      const r = this.activeOn(m, p, 'Ridley');
+      if (r && this.hasRoom(p) && await this.confirm(p, 'Ridley: return to your hand before the clash?', 'ridley', m)) {
+        m.sides[p].splice(m.sides[p].indexOf(r), 1); this.toHand(p, r); this.log('Ridley returns to the hand.');
+      }
+    }
     // Shu: send 1 opponent character back to hand
     for (const p of [0, 1]) {
       const shu = m.sides[p].find(x => this.def(x).key === 'Shu' && this.textOn(x));
@@ -472,19 +553,25 @@ export class Game {
       }
     }
     this.deciding = m;
+    const tuta = [0, 1].map(p => !!this.activeOn(m, p, 'Tuta'));
+    const lost = [[], []]; // characters discarded in the clash, per side
+    const wipe = async q => {
+      if (await this.saveSide(m, q)) return;
+      for (const x of m.sides[q].slice()) { await this.kill(x, x.owner, true); lost[q].push(x); }
+    };
     const A = this.total(m, 0, 'mil'), B = this.total(m, 1, 'mil');
     this.log(`Army clash! ${this.P[0].name} ${A} vs ${this.P[1].name} ${B}`);
     this.update();
     await this.pause(this.delay * 2);
     if (A === B) {
-      for (const x of m.sides.flat()) await this.kill(x, x.owner, true);
+      await wipe(0); await wipe(1);
       this.log('Both armies are wiped out.');
     } else {
-      const w = A > B ? 0 : 1, lost = Math.min(A, B);
-      for (const x of m.sides[1 - w].slice()) await this.kill(x, x.owner, true);
-      if (lost > 0) {
-        const rem = this.pickLosses(m, w, lost);
-        for (const x of rem) await this.kill(x, x.owner, true);
+      const w = A > B ? 0 : 1, loss = Math.min(A, B);
+      await wipe(1 - w);
+      if (loss > 0) {
+        const rem = this.pickLosses(m, w, loss);
+        for (const x of rem) { await this.kill(x, x.owner, true); lost[w].push(x); }
       }
       m.sides[w].forEach(x => { x.survived = true; });
       const left = this.total(m, w, 'mil');
@@ -494,6 +581,14 @@ export class Game {
     }
     this.deciding = null;
     m.sides.flat().forEach(x => { x.survived = false; });
+    // Tuta (Selection): put 1 of your characters lost in the clash on the bottom of your deck.
+    for (const q of [0, 1]) {
+      const P = this.P[q];
+      const t = lost[q].filter(x => P.discard.includes(x.id));
+      if (!tuta[q] || !t.length) continue;
+      const [x] = await P.ctl.choose(this, q, { title: 'Tuta: put 1 lost character on the bottom of your deck?', items: t, min: 0, max: 1, kind: 'inst', hint: 'keep' });
+      if (x) { P.discard.splice(P.discard.lastIndexOf(x.id), 1); P.deck.push(x.id); this.log(`Tuta: ${this.def(x).name} goes under the deck.`); }
+    }
     this.update();
   }
 
@@ -524,6 +619,7 @@ export class Game {
     }
     const isFac = m.mode === 'fac';
     this.log(isFac ? `${P.name} builds ${d.name}!` : `${P.name} clears ${d.name}!`);
+    m.endMil = [this.total(m, 0, 'mil'), this.total(m, 1, 'mil')]; // troops when it was won (Stallion)
     // Station a character
     let st = null;
     const can = m.sides[p].filter(x => !this.fx(x).noStation || !this.textOn(x));
@@ -542,6 +638,7 @@ export class Game {
         if (x) { m.sides[p].splice(m.sides[p].indexOf(x), 1); P.hand.push(x); }
       }
     }
+    await this.afterClear(m, p, res);
     const f = fxOf(d.id);
     if (f.onClear) await f.onClear(this, m, p);
     // Everyone else leaves.
@@ -561,6 +658,49 @@ export class Game {
     }
     this.update();
     await this.pause();
+  }
+
+  // Abilities after the winner p stations a character, before the rest are discarded.
+  async afterClear(m, p, res) {
+    const P = this.P[p];
+    // Inn: move a character from here to your Inn; the one there goes back to your hand.
+    const inn = P.resolved.find(r => r !== res && r.kind === 'facility' && !r.noText && this.def(r.card).base === 178);
+    if (inn && m.sides[p].length && (!inn.stationed || this.hasRoom(p))) {
+      const [x] = await P.ctl.choose(this, p, { title: 'Inn: move a character to your Inn?', items: m.sides[p].slice(), min: 0, max: 1, kind: 'inst', hint: 'keep' });
+      if (x) {
+        m.sides[p].splice(m.sides[p].indexOf(x), 1);
+        if (inn.stationed) this.toHand(p, inn.stationed);
+        inn.stationed = x; x.tmp = { atk: 0, mil: 0, bld: 0 };
+        this.log(`${this.def(x).name} stays at the Inn.`);
+      }
+    }
+    for (const q of [0, 1]) {
+      const Q = this.P[q];
+      // Kinnison: return one of your beasts here to your deck.
+      const beasts = m.sides[q].filter(x => this.def(x).sex === 'B');
+      if (this.activeOn(m, q, 'Kinnison') && beasts.length) {
+        const [x] = await Q.ctl.choose(this, q, { title: 'Kinnison: return a beast to your deck?', items: beasts, min: 0, max: 1, kind: 'inst', hint: 'keep' });
+        if (x) { m.sides[q].splice(m.sides[q].indexOf(x), 1); Q.deck.push(x.id); Q.deck = shuffle(Q.deck); this.log(`Kinnison: ${this.def(x).name} goes back into the deck.`); }
+      }
+      // Tuta (Sword battle): put 1 of your characters here on the bottom of your deck.
+      if (m.mode === 'atk' && this.activeOn(m, q, 'Tuta')) {
+        const [x] = await Q.ctl.choose(this, q, { title: 'Tuta: put 1 character on the bottom of your deck?', items: m.sides[q].slice(), min: 0, max: 1, kind: 'inst', hint: 'keep' });
+        if (x) { m.sides[q].splice(m.sides[q].indexOf(x), 1); Q.deck.push(x.id); this.log(`Tuta: ${this.def(x).name} goes under the deck.`); }
+      }
+      // Oulan (Response): discard Oulan from your hand to take up to 2 characters here into your hand.
+      const oulan = this.handCard(q, 'Oulan');
+      const space = this.handLimit(q) - Q.hand.length + 1;
+      if (oulan && m.sides[q].length) {
+        const xs = await Q.ctl.choose(this, q, { title: 'Oulan: discard Oulan to take back up to 2 characters?', items: m.sides[q].slice(), min: 0, max: Math.min(2, space), kind: 'inst', hint: 'keep' });
+        if (xs.length) {
+          this.discardFromHand(q, oulan);
+          xs.forEach(x => { m.sides[q].splice(m.sides[q].indexOf(x), 1); this.toHand(q, x); });
+          this.log(`Oulan: ${Q.name} takes back ${xs.map(x => this.def(x).name).join(' and ')}.`);
+        }
+      }
+      // Stallion (Sword battle): fewer troops than the enemy here: all your characters go to your deck.
+      if (m.mode === 'atk') await this.saveSide(m, q, true);
+    }
   }
 
   addVP(p, n, why) {
@@ -768,7 +908,46 @@ export class Game {
     this.log(`${P.name} builds ${this.def(c).name} (no ability).`);
     if (P.mm && this.def(P.mm).base === 2) this.addVP(p, 1, 'Riou');
   }
-  scrapMission(m) {
+  // Gambling Hall: with fewer cards than the hand limit, play the top card of the deck.
+  // If it cannot go here, it is discarded with the next top card. Returns the card or null.
+  canGamble(p) { return this.builtCount(p, 188) > 0 && this.hasRoom(p) && this.P[p].deck.length > 0; }
+  async gamble(p, m) {
+    const P = this.P[p];
+    const c = this.card(P.deck.shift());
+    P.hand.push(c);
+    this.log(`Gambling Hall: ${P.name} turns over ${this.def(c).name}.`);
+    if (!this.whyNot(p, c, m)) { await this.deploy(p, c, m); return c; }
+    this.discardFromHand(p, c);
+    this.log('It cannot be used here and is discarded.');
+    this.millTop(p, 1);
+    return null;
+  }
+  // Raura (Response): other unsolved missions Raura can go to, ignoring links.
+  rauraTargets(p, m) {
+    const r = this.handCard(p, 'Raura');
+    if (!r) return [];
+    return this.missions.filter(m2 => m2 !== m && m2.mode !== 'duel' && !this.whyNot(p, r, m2, { ignoreLinks: true }));
+  }
+  // Tenkou (Appearance): swap one of your characters here with one of yours on another unsolved mission.
+  async tenkou(inst, m) {
+    const p = inst.owner, P = this.P[p];
+    const here = m.sides[p].filter(x => x !== inst);
+    const there = this.missions.filter(m2 => m2 !== m).flatMap(m2 => m2.sides[p]);
+    if (!here.length || !there.length) return;
+    const [a] = await P.ctl.choose(this, p, { title: 'Tenkou: swap one of your characters here with another mission?', items: here, min: 0, max: 1, kind: 'inst', hint: 'tenkou' });
+    if (!a) return;
+    const [b] = await P.ctl.choose(this, p, { title: `Tenkou: swap ${this.def(a).name} with which character?`, items: there, min: 1, max: 1, kind: 'inst', hint: 'tenkou' });
+    const m2 = this.missionOf(b);
+    m.sides[p][m.sides[p].indexOf(a)] = b;
+    m2.sides[p][m2.sides[p].indexOf(b)] = a;
+    this.log(`Tenkou swaps ${this.def(a).name} and ${this.def(b).name}.`);
+    this.update();
+    await this.appear(b, m);
+    await this.appear(a, m2);
+    await this.checkClear(m2);
+  }
+  async scrapMission(m) {
+    for (const q of [0, 1]) await this.saveSide(m, q); // Huan / Stallion
     this.missions.splice(this.missions.indexOf(m), 1);
     for (const x of m.sides.flat()) this.leaveMission(x);
     this.toDiscard(m.owner, m.card);
